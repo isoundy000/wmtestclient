@@ -7,23 +7,13 @@
 // Learn life-cycle callbacks:
 //  - [Chinese] https://docs.cocos.com/creator/manual/zh/scripting/life-cycle-callbacks.html
 //  - [English] https://www.cocos2d-x.org/docs/creator/manual/en/scripting/life-cycle-callbacks.html
+require('golbalfunction');
+require('pomeloclient');
 
 cc.Class({
     extends: cc.Component,
 
     properties: {
-        login: {
-            default: null,
-            type: cc.Button
-        },
-        zhanghao: {
-            default: null,
-            type: cc.EditBox
-        },
-        secret: {
-            default: null,
-            type: cc.EditBox
-        },
         loading: {
             default: null,
             type: cc.Prefab
@@ -35,29 +25,13 @@ cc.Class({
     // onLoad () {},
 
     start () {
-
-    },
-    onTouchLogin() {
-        console.log('---------------onTouchLogin');
-        if (pomelo) {
-            console.log('---------------pomelo');
-            pomelo.init({
-                host: "192.168.1.211",
-                port: 3014,
-                log: true
-            }, function () {
-                    pomelo.request('gate.gateHandler.queryEntry', { clientType: "app" }, function (data) {
-                        console.log('----------------------', data)
-                    });
-            });
-            
-        }
         var loading = cc.instantiate(this.loading);
         loading.active = true;
         this.node.addChild(loading);
         setTimeout(function () {
-            loading.active = false;
+            cc.director.loadScene("login");
         }, 5000);
-    }
+    },
+
     // update (dt) {},
 });
