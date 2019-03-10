@@ -1,63 +1,79 @@
-// Learn cc.Class:
-//  - [Chinese] https://docs.cocos.com/creator/manual/zh/scripting/class.html
-//  - [English] http://docs.cocos2d-x.org/creator/manual/en/scripting/class.html
-// Learn Attribute:
-//  - [Chinese] https://docs.cocos.com/creator/manual/zh/scripting/reference/attributes.html
-//  - [English] http://docs.cocos2d-x.org/creator/manual/en/scripting/reference/attributes.html
-// Learn life-cycle callbacks:
-//  - [Chinese] https://docs.cocos.com/creator/manual/zh/scripting/life-cycle-callbacks.html
-//  - [English] https://www.cocos2d-x.org/docs/creator/manual/en/scripting/life-cycle-callbacks.html
-
+require('pomelo-creator-client');
+require('netWork');
 cc.Class({
-    extends: cc.Component,
+	extends: cc.Component,
 
-    properties: {
-        login: {
-            default: null,
-            type: cc.Button
-        },
-        zhanghao: {
-            default: null,
-            type: cc.EditBox
-        },
-        secret: {
-            default: null,
-            type: cc.EditBox
-        },
-        loading: {
-            default: null,
-            type: cc.Prefab
-        }
-    },
+	properties: {
+		login: {
+			default: null,
+			type: cc.Button
+		},
+		zhanghao: {
+			default: null,
+			type: cc.EditBox
+		},
+		secret: {
+			default: null,
+			type: cc.EditBox
+		},
 
-    // LIFE-CYCLE CALLBACKS:
+	},
 
-    // onLoad () {},
+	// LIFE-CYCLE CALLBACKS:
 
-    start () {
+	onLoad() {
+		gl_sendqueue = [];
+	},
 
-    },
-    onTouchLogin() {
-        console.log('---------------onTouchLogin');
-        if (pomelo) {
-            console.log('---------------pomelo');
-            pomelo.init({
-                host: "192.168.1.211",
-                port: 3014,
-                log: true
-            }, function () {
-                    pomelo.request('gate.gateHandler.queryEntry', { clientType: "app" }, function (data) {
-                        console.log('----------------------', data)
-                    });
-            });
-            
-        }
-        var loading = cc.instantiate(this.loading);
-        loading.active = true;
-        this.node.addChild(loading);
-        setTimeout(function () {
-            loading.active = false;
-        }, 5000);
-    }
-    // update (dt) {},
+	start() {
+
+	},
+	onTouchLogin() {
+		console.log('---------------onTouchLogin', this.zhanghao.string, this.secret.string);
+		if (!this.zhanghao.string || !this.secret.string) {
+			return golbalFun.showMessage("账号或密码不能为空");
+		}
+		this.connectToserver(this.zhanghao.string, this.secret.string);
+	},
+	// update (dt) {},
+	connectToserver(account, password) {
+		let self = this;
+		golbalFun.setLoading(true);
+		pomelo.disconnect(function () {
+			pomelo.init({
+				host: "47.111.75.80",
+				port: 3014,
+			}, function () {
+				var route = 'gate.gateHandler.queryEntry';
+				pomelo.request(route, {}, function (data) {
+					console.log('data', data);
+					if (data.code == 200) {
+						pomelo.disconnect(function () {
+							pomelo.init({
+								host: data.host,
+								port: data.port,
+								reconnect: true
+							}, function () {
+								golbalFun.setLoading(false);
+								self.loginAccount(account, password);
+							})
+						});
+					}
+				})
+			});
+		})
+
+	},
+	loginAccount() {
+		var self = this;
+		gl_netWork.send("connector.entryHandler.login", {
+			userName: "pre110",
+			password: '112233',
+			mode: 2,
+			deviceID: '112233'
+		}, function (data) {
+			console.log('-----', data)
+		}, true);
+	},
+
 });

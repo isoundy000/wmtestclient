@@ -1,5 +1,3 @@
-var errorCode = require('errorCode');
-
 (function () {
 
   /**
@@ -46,7 +44,7 @@ var errorCode = require('errorCode');
     Emitter.prototype.addEventListener = function (event, fn) {
       this._callbacks = this._callbacks || {};
       (this._callbacks[event] = this._callbacks[event] || [])
-        .push(fn);
+      .push(fn);
       return this;
     };
 
@@ -128,8 +126,8 @@ var errorCode = require('errorCode');
 
   Emitter.prototype.emit = function (event) {
     this._callbacks = this._callbacks || {};
-    var args = [].slice.call(arguments, 1)
-      , callbacks = this._callbacks[event];
+    var args = [].slice.call(arguments, 1),
+      callbacks = this._callbacks[event];
 
     if (callbacks) {
       callbacks = callbacks.slice(0);
@@ -254,13 +252,7 @@ var errorCode = require('errorCode');
       }
       array.push(charCode);
     }
-
-    var s = "";
-    for (var i = 0; i < array.length; i++) {
-      s += String.fromCharCode(array[i]);
-    }
-
-    return s;
+    return String.fromCharCode.apply(null, array);
   };
 
   /**
@@ -317,7 +309,10 @@ var errorCode = require('errorCode');
       var body = length ? new ByteArray(length) : null;
       copyArray(body, 0, bytes, offset, length);
       offset += length;
-      rs.push({ 'type': type, 'body': body });
+      rs.push({
+        'type': type,
+        'body': body
+      });
     }
     return rs.length === 1 ? rs[0] : rs;
   };
@@ -437,8 +432,11 @@ var errorCode = require('errorCode');
     copyArray(body, 0, bytes, offset, bodyLen);
 
     return {
-      'id': id, 'type': type, 'compressRoute': compressRoute,
-      'route': route, 'body': body
+      'id': id,
+      'type': type,
+      'compressRoute': compressRoute,
+      'route': route,
+      'body': body
     };
   };
 
@@ -978,7 +976,7 @@ var errorCode = require('errorCode');
   }
 
   function writeBytes(buffer, offset, bytes) {
-    for (var i = 0; i < bytes.length; i++ , offset++) {
+    for (var i = 0; i < bytes.length; i++, offset++) {
       buffer[offset] = bytes[i];
     }
 
@@ -1153,7 +1151,7 @@ var errorCode = require('errorCode');
 
 })('undefined' !== typeof protobuf ? protobuf : module.exports, this);
 
-(function () {
+cc.Pomelo = function () {
   var JS_WS_CLIENT_TYPE = 'js-websocket';
   var JS_WS_CLIENT_VERSION = '0.0.1';
 
@@ -1178,7 +1176,7 @@ var errorCode = require('errorCode');
 
   if (typeof Object.create !== 'function') {
     Object.create = function (o) {
-      function F() { }
+      function F() {}
       F.prototype = o;
       return new F();
     };
@@ -1186,15 +1184,15 @@ var errorCode = require('errorCode');
 
   var root = window;
   var pomelo = Object.create(EventEmitter.prototype); // object extend from object
-  root.pomelo = pomelo;
+  // root.pomelo = pomelo;
   var socket = null;
   var reqId = 0;
   var callbacks = {};
   var handlers = {};
   //Map from request id to route
   var routeMap = {};
-  var dict = {};    // route string to code
-  var abbrs = {};   // code to route string
+  var dict = {}; // route string to code
+  var abbrs = {}; // code to route string
   var serverProtos = {};
   var clientProtos = {};
   var protoVersion = 0;
@@ -1202,7 +1200,7 @@ var errorCode = require('errorCode');
   var heartbeatInterval = 0;
   var heartbeatTimeout = 0;
   var nextHeartbeatTimeout = 0;
-  var gapThreshold = 100;   // heartbeat gap threashold
+  var gapThreshold = 100; // heartbeat gap threashold
   var heartbeatId = null;
   var heartbeatTimeoutId = null;
   var handshakeCallback = null;
@@ -1214,8 +1212,8 @@ var errorCode = require('errorCode');
   var reconncetTimer = null;
   var reconnectUrl = null;
   var reconnectAttempts = 0;
-  var reconnectionDelay = 3000;
-  var DEFAULT_MAX_RECONNECT_ATTEMPTS = 3;
+  var reconnectionDelay = 5000;
+  var DEFAULT_MAX_RECONNECT_ATTEMPTS = 10;
 
   var useCrypto;
 
@@ -1225,15 +1223,13 @@ var errorCode = require('errorCode');
       version: JS_WS_CLIENT_VERSION,
       rsa: {}
     },
-    'user': {
-    }
+    'user': {}
   };
 
-  pomelo.initCallback = null;
+  var initCallback = null;
 
   pomelo.init = function (params, cb) {
-    pomelo.initCallback = cb;
-
+    initCallback = cb;
     var host = params.host;
     var port = params.port;
 
@@ -1299,11 +1295,9 @@ var errorCode = require('errorCode');
 
   var connect = function (params, url, cb) {
     console.log('connect to ' + url);
-    pomelo.autoReconnect = true;
 
     var params = params || {};
     var maxReconnectAttempts = params.maxReconnectAttempts || DEFAULT_MAX_RECONNECT_ATTEMPTS;
-
     reconnectUrl = url;
     //Add protobuf version
     if (window.localStorage && window.localStorage.getItem('protos') && protoVersion === 0) {
@@ -1314,7 +1308,10 @@ var errorCode = require('errorCode');
       clientProtos = protos.client || {};
 
       if (!!protobuf) {
-        protobuf.init({ encoderProtos: clientProtos, decoderProtos: serverProtos });
+        protobuf.init({
+          encoderProtos: clientProtos,
+          decoderProtos: serverProtos
+        });
       }
       if (!!decodeIO_protobuf) {
         decodeIO_encoder = decodeIO_protobuf.loadJson(clientProtos);
@@ -1331,7 +1328,6 @@ var errorCode = require('errorCode');
       reset();
       var obj = Package.encode(Package.TYPE_HANDSHAKE, Protocol.strencode(JSON.stringify(handshakeBuffer)));
       send(obj);
-      //GameToast.showSocketClose(false);
     };
     var onmessage = function (event) {
       processPackage(Package.decode(event.data), cb);
@@ -1341,30 +1337,20 @@ var errorCode = require('errorCode');
       }
     };
     var onerror = function (event) {
-      // gameRestart();
-      //GameToast.showSocketClose(true);
       pomelo.emit('io-error', event);
       console.error('socket error: ', event);
     };
     var onclose = function (event) {
       pomelo.emit('close', event);
       pomelo.emit('disconnect', event);
-      console.error('socket连接关闭: ', event, pomelo.autoReconnect, reconnectAttempts, maxReconnectAttempts);
-      gameController.msgMgr.isConnect = false;
-
-      if (pomelo.autoReconnect) {
-        if (reconnectAttempts < maxReconnectAttempts) {
-          console.log('进行重连，重连次数 reconnectAttempts：', reconnectAttempts);
-          
-          reconnect = true;
-          reconnectAttempts++;
-          reconncetTimer = setTimeout(function () {
-            connect(params, reconnectUrl, cb);
-          }, reconnectionDelay);
-          reconnectionDelay *= 1.5;
-        } else {
-          gameRestart();
-        }
+      console.error('socket close: ', event);
+      if (!!params.reconnect && reconnectAttempts < maxReconnectAttempts) {
+        reconnect = true;
+        reconnectAttempts++;
+        reconncetTimer = setTimeout(function () {
+          connect(params, reconnectUrl, cb);
+        }, reconnectionDelay);
+        reconnectionDelay *= 2;
       }
       socket = null;
       disconnectCb && disconnectCb();
@@ -1378,16 +1364,15 @@ var errorCode = require('errorCode');
     socket.onclose = onclose;
   };
 
-  pomelo.disconnect = function (cb, autoReconnect) {
-    cc.log('pomelo.disconnect');
-    pomelo.autoReconnect = autoReconnect;
-    // pomelo.initCallback = null;
+  pomelo.disconnect = function (cb) {
     disconnectCb = cb;
     if (socket) {
       if (socket.disconnect) socket.disconnect();
       if (socket.close) socket.close();
       console.log('disconnect');
       socket = null;
+    } else {
+      cb();
     }
 
     if (heartbeatId) {
@@ -1405,28 +1390,9 @@ var errorCode = require('errorCode');
     reconnectionDelay = 1000 * 5;
     reconnectAttempts = 0;
     clearTimeout(reconncetTimer);
-    // 清理数据
-    //GameToast.loadingClear();
   };
 
-  var gameRestart = function () {
-    GameToast.popupTipConfirm('网络环境不稳定请检查网络，重新登录',
-      function () {
-        doResart();
-      },
-      function () {
-        doResart();
-      }
-    );
-  };
-
-  var doResart = function () {
-    reset();
-    gameController.msgMgr.isConnect = false;
-    cc.loadScene('loading');
-  };
-
-  pomelo.request = function (route, msg, showLoading, cb, errorCb) {
+  pomelo.request = function (route, msg, cb) {
     if (arguments.length === 2 && typeof msg === 'function') {
       cb = msg;
       msg = {};
@@ -1438,16 +1404,10 @@ var errorCode = require('errorCode');
       return;
     }
 
-    if (GameToast.getLoadingShow(route)) {
-      console.log('消息没回禁止点击')
-      return;
-    }
-
     reqId++;
     sendMessage(reqId, route, msg);
-    GameToast.showLoading(showLoading, route);
-    callbacks[reqId] = [cb];
-    errorCb && (callbacks[reqId].push(errorCb));
+
+    callbacks[reqId] = cb;
     routeMap[reqId] = route;
   };
 
@@ -1463,7 +1423,7 @@ var errorCode = require('errorCode');
       msg = JSON.parse(msg);
       msg['__crypto__'] = sig;
     }
-
+    console.log('---sendMessage---', reqId, route, msg)
     if (encode) {
       msg = encode(reqId, route, msg);
     }
@@ -1512,7 +1472,7 @@ var errorCode = require('errorCode');
     } else {
       console.error('server heartbeat timeout');
       pomelo.emit('heartbeat timeout');
-      pomelo.disconnect(null, true);
+      pomelo.disconnect();
     }
   };
 
@@ -1532,9 +1492,8 @@ var errorCode = require('errorCode');
 
     var obj = Package.encode(Package.TYPE_HANDSHAKE_ACK);
     send(obj);
-
-    if (pomelo.initCallback) {
-      pomelo.initCallback(socket);
+    if (initCallback) {
+      initCallback(socket);
     }
   };
 
@@ -1543,7 +1502,7 @@ var errorCode = require('errorCode');
     if (decode) {
       msg = decode(msg);
     }
-    nextHeartbeatTimeout = Date.now() + heartbeatTimeout;
+
     processMessage(pomelo, msg);
   };
 
@@ -1569,55 +1528,23 @@ var errorCode = require('errorCode');
   };
 
   var processMessage = function (pomelo, msg) {
-    GameToast.hideLoading(msg.route);
-
-    /**统一处理错误码**/
-    var code = parseInt(msg.body.code);
-
-    // if (GAMECONFIG.isDebug)
-      console.log('processMessage :', JSON.stringify(msg));
-
+    console.log('---processMessage----', msg);
     if (!msg.id) {
       // server push message
       pomelo.emit(msg.route, msg.body);
       return;
     }
 
+    //if have a id then find the callback function with the request
     var cb = callbacks[msg.id];
+
     delete callbacks[msg.id];
-
-    if (code === 200) {
-      cb[0] && cb[0](msg.body);
+    if (typeof cb !== 'function') {
       return;
     }
 
-    if (cb.length > 1) {
-      cb[1] && cb[1](msg.body);
-    }
-
-    // 服务器与客户端不同步，需要重启应用
-    if (code === 500) {
-      GameToast.showMessage('数据不同步，准备重连！');
-
-      if (msg.route != 'connector.entryHandler.login') {
-        setTimeout(function () {
-          gameController.msgMgr.autoLogin();
-        }, 1000);
-      }
-
-      return;
-    }
-
-    //错误列表中定义的错误
-    if (code > 1000) {
-      var content = errorCode[msg.body.code];
-      if (content != null) {
-        content.length > 0 && GameToast.showMessage(errorCode[msg.body.code]);
-        return;
-      }
-    }
-
-    GameToast.showMessage('未知错误' + '[' + msg.body.code + ']!');
+    cb(msg.body);
+    return;
   };
 
   var processMessageBatch = function (pomelo, msgs) {
@@ -1650,8 +1577,8 @@ var errorCode = require('errorCode');
 
   var handshakeInit = function (data) {
     if (data.sys && data.sys.heartbeat) {
-      heartbeatInterval = data.sys.heartbeat * 1000;   // heartbeat interval
-      heartbeatTimeout = heartbeatInterval * 2;        // max heartbeat timeout
+      heartbeatInterval = data.sys.heartbeat * 1000; // heartbeat interval
+      heartbeatTimeout = heartbeatInterval * 2; // max heartbeat timeout
     } else {
       heartbeatInterval = 0;
       heartbeatTimeout = 0;
@@ -1692,7 +1619,10 @@ var errorCode = require('errorCode');
       window.localStorage.setItem('protos', JSON.stringify(protos));
 
       if (!!protobuf) {
-        protobuf.init({ encoderProtos: protos.client, decoderProtos: protos.server });
+        protobuf.init({
+          encoderProtos: protos.client,
+          decoderProtos: protos.server
+        });
       }
       if (!!decodeIO_protobuf) {
         decodeIO_encoder = decodeIO_protobuf.loadJson(clientProtos);
@@ -1700,10 +1630,7 @@ var errorCode = require('errorCode');
       }
     }
   };
-
+  return pomelo;
   // module.exports = pomelo;
-})();
-
-
-
-
+};
+window.pomelo = new cc.Pomelo();
