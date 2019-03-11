@@ -26,14 +26,19 @@ netWork.pushMsg = function () {
                 golbalFun.setLoading(false);
             }
             if (msg.cb) {
-                if (data.code == 200) {
+                if (msg.route == 'connector.entryHandler.login') {
                     msg.cb(data);
-                } else if (data.code == 500) {
-
                 } else {
-                    var errormsg = data.msg || "未知错误！";
-                    golbalFun.showMessage(errormsg);
+                    if (data.code == 200) {
+                        msg.cb(data);
+                    } else if (data.code == -500) {
+                        golbalFun.showMessage(data.msg);
+                    } else {
+                        var errormsg = data.msg || "未知错误！";
+                        golbalFun.showMessage(errormsg);
+                    }
                 }
+
             }
             netWork.pushMsg();
         });

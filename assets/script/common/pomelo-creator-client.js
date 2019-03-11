@@ -1372,7 +1372,7 @@ cc.Pomelo = function () {
       console.log('disconnect');
       socket = null;
     } else {
-      cb();
+      cb && cb();
     }
 
     if (heartbeatId) {
@@ -1383,6 +1383,29 @@ cc.Pomelo = function () {
       clearTimeout(heartbeatTimeoutId);
       heartbeatTimeoutId = null;
     }
+  };
+
+  pomelo.disconnectclt = function (cb) {
+    reset();
+    disconnectCb = cb;
+    if (socket) {
+      if (socket.disconnect) socket.disconnect();
+      if (socket.close) socket.close();
+      console.log('disconnect');
+      socket = null;
+    } else {
+      cb && cb();
+    }
+
+    if (heartbeatId) {
+      clearTimeout(heartbeatId);
+      heartbeatId = null;
+    }
+    if (heartbeatTimeoutId) {
+      clearTimeout(heartbeatTimeoutId);
+      heartbeatTimeoutId = null;
+    }
+    
   };
 
   var reset = function () {

@@ -41,7 +41,7 @@ cc.Class({
 		golbalFun.setLoading(true);
 		pomelo.disconnect(function () {
 			pomelo.init({
-				host: "47.111.75.80",
+				host: "127.0.0.1",
 				port: 3014,
 			}, function () {
 				var route = 'gate.gateHandler.queryEntry';
@@ -55,7 +55,7 @@ cc.Class({
 								reconnect: true
 							}, function () {
 								golbalFun.setLoading(false);
-								self.loginAccount(account, password);
+								self.loginAccount(account, password, "110");
 							})
 						});
 					}
@@ -64,15 +64,23 @@ cc.Class({
 		})
 
 	},
-	loginAccount() {
+	loginAccount(account, password, device) {
 		var self = this;
 		gl_netWork.send("connector.entryHandler.login", {
-			userName: "pre110",
-			password: '112233',
-			mode: 2,
-			deviceID: '112233'
+			mobile: account,
+			password,
+			device
 		}, function (data) {
 			console.log('-----', data)
+			if (!data.code || data.code != 200) {
+				if (data.code == -500) {
+					golbalFun.showMessage(data.msg);
+				} else {
+					var errormsg = data.msg || "未知错误！";
+					golbalFun.showMessage(errormsg);
+				}
+				pomelo.disconnectclt(function () {});
+			}
 		}, true);
 	},
 
